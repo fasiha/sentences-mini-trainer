@@ -1,12 +1,20 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const DOC_NAME = "gloss-1k.json";
+let englishVoice = null;
+let japaneseVoice = null;
+const synth = window.speechSynthesis;
+let sentences = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   const supabase = createClient(
     "https://jjmuoksvuqkmoelmkkzt.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbXVva3N2dXFrbW9lbG1ra3p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5NDQyMTIsImV4cCI6MjA3NDUyMDIxMn0.wYkxPxckAlX1OzImJdUjvGoZ7S6NO62xE2bzMRTMUxw"
   );
+  initializeVoices();
+  window.speechSynthesis.onvoiceschanged = () => {
+    initializeVoices();
+  };
 
   (async () => {
     const { data, error } = await supabase.auth.getUser();
@@ -29,8 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
         password,
       });
 
-      console.log("result", { data, error });
-
       if (!error) {
         hideSignIn();
         loadTable(supabase);
@@ -38,31 +44,29 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   document
-    .querySelector("button#select")
+    .querySelector("button#demo-voice")
     ?.addEventListener("click", async () => {
-      const { data, error } = await supabase.from("reviews").select();
-      console.log("reviews", { data, error });
-    });
+      let utterance = new SpeechSynthesisUtterance("おはようございます");
+      if (japaneseVoice) utterance.voice = japaneseVoice;
+      synth.speak(utterance);
 
-  document
-    .querySelector("button#test-quiz")
-    ?.addEventListener("click", async () => {
-      const { data, error } = await supabase
-        .from("reviews")
-        .insert({
-          document_ident: "testing",
-          card_ident: "test 1",
-          result: {
-            correct: Math.random() < 0.75,
-            time: Math.floor(Math.random() * 1000),
-            v: 0,
-          },
-        })
-        .select();
-
-      console.log("insert review", { data, error });
+      utterance = new SpeechSynthesisUtterance("Hello world!");
+      if (englishVoice) utterance.voice = englishVoice;
+      synth.speak(utterance);
     });
 });
+
+const initializeVoices = () => {
+  const voices = synth.getVoices();
+  const japaneseVoices = voices.filter((o) => o.lang.startsWith("ja"));
+  const englishVoices = voices.filter((o) => o.lang.startsWith("en"));
+
+  const kyoko = japaneseVoices.find((o) => o.name === "Kyoko");
+  if (kyoko) japaneseVoice = kyoko;
+
+  const samantha = englishVoices.find((o) => o.name === "Samantha");
+  if (samantha) englishVoice = samantha;
+};
 
 const hideSignIn = () => {
   document.querySelector("form#signin")?.classList.add("signed-in");
@@ -73,7 +77,8 @@ const loadTable = async (supabase) => {
     .from("documents")
     .download(DOC_NAME);
   if (data) {
-    renderTable(supabase, JSON.parse(await data.text()));
+    sentences = JSON.parse(await data.text());
+    renderTable(supabase, sentences);
 
     const selectedData = await supabase
       .from("memory")
@@ -115,7 +120,10 @@ const renderTable = (supabase, arr) => {
       (row, id) => `
     <tr data-id="${id}">
       <td data-lang="en">${row.en}</td>
-      <td><button class="learn" data-id="${id}"></button></td>
+      <td>
+        <button class="learn" data-id="${id}" title="Learn"></button>
+        <button class="play" data-id="${id}" title="Play">▶️</button>
+      </td>
       <td data-lang="ja">${row.ja}</td>
     </tr>`
     )
@@ -123,11 +131,43 @@ const renderTable = (supabase, arr) => {
   </tbody>
   `;
 
-  table.querySelectorAll("button").forEach((button) => {
-    button.addEventListener("click", (e) => {
-      const id = e.target.dataset.id;
-      learnRow(supabase, id);
-    });
+  const learnHandler = (e) => {
+    const id = e.target.dataset.id;
+    learnRow(supabase, id);
+  };
+
+  table.querySelectorAll("button.learn").forEach((button) => {
+    button.addEventListener("click", learnHandler);
+  });
+
+  const playHandler = (e) => {
+    synth.cancel();
+
+    const id = Number(e.target.dataset.id);
+    const row = sentences?.[id];
+
+    if (!row) return;
+
+    const utterances = [];
+
+    const ja = new SpeechSynthesisUtterance(row.ja);
+    if (japaneseVoice) ja.voice = japaneseVoice;
+    utterances.push(ja);
+
+    const en = new SpeechSynthesisUtterance(row.en);
+    if (englishVoice) en.voice = englishVoice;
+    utterances.push(en);
+
+    // Say Japanese again
+    utterances.push(ja);
+
+    for (const u of utterances) {
+      synth.speak(u);
+    }
+  };
+
+  table.querySelectorAll("button.play").forEach((button) => {
+    button.addEventListener("click", playHandler);
   });
 };
 

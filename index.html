@@ -20,6 +20,18 @@
         background: hsl(90 30% 20%);
         color: hsl(90 30% 30% / 0.1);
       }
+
+      th:nth-child(1),
+      td:nth-child(1),
+      th:nth-child(3),
+      td:nth-child(3) {
+        width: 45%;
+      }
+      th:nth-child(2),
+      td:nth-child(2) {
+        width: 10%;
+        text-align: center;
+      }
     </style>
   </head>
 
@@ -29,8 +41,7 @@
       <input type="password" id="password" placeholder="Enter your password" />
       <button type="submit" id="signin-submit">Sign in</button>
     </form>
-    <button id="select">Select reviews</button>
-    <button id="test-quiz">Submit test quiz</button>
+    <button id="demo-voice">Demo voice</button>
 
     <div id="login-result" />
 
