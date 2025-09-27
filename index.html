@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./perfectmotherfuckingwebsite.css" />
+    <style>
+      form.signed-in {
+        display: none;
+      }
+
+      button.learn::before {
+        content: "✅";
+      }
+      button.learn[data-learned]::before {
+        content: "❗️";
+      }
+
+      tr:has(button[data-learned]) td[data-lang="ja"] {
+        background: hsl(90 30% 20%);
+        color: hsl(90 30% 30% / 0.1);
+      }
+    </style>
+  </head>
+
+  <body>
+    <form id="signin">
+      <input type="email" id="email" placeholder="Enter your email" />
+      <input type="password" id="password" placeholder="Enter your password" />
+      <button type="submit" id="signin-submit">Sign in</button>
+    </form>
+    <button id="select">Select reviews</button>
+    <button id="test-quiz">Submit test quiz</button>
+
+    <div id="login-result" />
+
+    <table id="document"></table>
+
+    <script type="module" src="./browser.js"></script>
+  </body>
+</html>
