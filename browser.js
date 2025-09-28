@@ -147,8 +147,11 @@ const renderTable = (supabase, arr) => {
 
     if (!row) return;
 
+    // Replace spaces and the bar for more natural sound.
+    const cleanJa = row.ja.replaceAll(/\s/g, "").replaceAll(/[―]+/gu, "\n");
+
     // Say Japanese first, slowly
-    const ja = new SpeechSynthesisUtterance(row.ja);
+    const ja = new SpeechSynthesisUtterance(cleanJa);
     if (japaneseVoice) ja.voice = japaneseVoice;
     ja.rate = 0.5;
     synth.speak(ja);
@@ -159,7 +162,7 @@ const renderTable = (supabase, arr) => {
     synth.speak(en);
 
     // Say Japanese again, normal speed
-    const ja2 = new SpeechSynthesisUtterance(row.ja);
+    const ja2 = new SpeechSynthesisUtterance(cleanJa);
     if (japaneseVoice) ja2.voice = japaneseVoice;
     synth.speak(ja2);
   };
