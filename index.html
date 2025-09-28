@@ -32,15 +32,46 @@
         width: 10%;
         text-align: center;
       }
+
+      #review-area:not(.hidden) {
+        height: 100vh;
+      }
+
+      #review-area.hidden,
+      #review-area .hidden {
+        display: none;
+      }
+
+      #notifications {
+        position: fixed;
+        top: 0;
+        right: 0;
+        max-width: 30vw;
+        z-index: 2;
+      }
+
+      #notifications:not(:empty) {
+        padding: 0.5em;
+
+        border: 1px solid hotpink;
+        border-radius: 0.5rem;
+      }
     </style>
   </head>
 
   <body>
+    <div id="notifications"></div>
+
     <form id="signin">
       <input type="email" id="email" placeholder="Enter your email" />
       <input type="password" id="password" placeholder="Enter your password" />
       <button type="submit" id="signin-submit">Sign in</button>
     </form>
+
+    <div id="review-container">
+      <button id="review-button">Review</button>
+      <div id="review-area" class="hidden"></div>
+    </div>
 
     <table id="document"></table>
 
