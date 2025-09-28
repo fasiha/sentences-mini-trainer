@@ -152,22 +152,21 @@ const renderTable = (supabase, arr) => {
 
     if (!row) return;
 
-    const utterances = [];
-
+    // Say Japanese first, slowly
     const ja = new SpeechSynthesisUtterance(row.ja);
     if (japaneseVoice) ja.voice = japaneseVoice;
-    utterances.push(ja);
+    ja.rate = 0.5;
+    synth.speak(ja);
 
+    // Then English, normal speed
     const en = new SpeechSynthesisUtterance(row.en);
     if (englishVoice) en.voice = englishVoice;
-    utterances.push(en);
+    synth.speak(en);
 
-    // Say Japanese again
-    utterances.push(ja);
-
-    for (const u of utterances) {
-      synth.speak(u);
-    }
+    // Say Japanese again, normal speed
+    const ja2 = new SpeechSynthesisUtterance(row.ja);
+    if (japaneseVoice) ja2.voice = japaneseVoice;
+    synth.speak(ja2);
   };
 
   table.querySelectorAll("button.play").forEach((button) => {
