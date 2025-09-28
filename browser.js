@@ -46,18 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
         loadTable(supabase);
       }
     });
-
-  document
-    .querySelector("button#demo-voice")
-    ?.addEventListener("click", async () => {
-      let utterance = new SpeechSynthesisUtterance("おはようございます");
-      if (japaneseVoice) utterance.voice = japaneseVoice;
-      synth.speak(utterance);
-
-      utterance = new SpeechSynthesisUtterance("Hello world!");
-      if (englishVoice) utterance.voice = englishVoice;
-      synth.speak(utterance);
-    });
 });
 
 const initializeVoices = () => {
