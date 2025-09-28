@@ -65,8 +65,15 @@ const initializeVoices = () => {
   const japaneseVoices = voices.filter((o) => o.lang.startsWith("ja"));
   const englishVoices = voices.filter((o) => o.lang.startsWith("en"));
 
-  const kyoko = japaneseVoices.find((o) => o.name === "Kyoko");
-  if (kyoko) japaneseVoice = kyoko;
+  japaneseVoice =
+    japaneseVoices.find((o) => o.name.includes("Otoya")) ||
+    japaneseVoices.find((o) => o.name.includes("Hattori")) ||
+    japaneseVoices.find((o) => o.name.includes("O-Ren")) ||
+    japaneseVoices.find(
+      (o) => o.name.includes("Kyoko") && o.name.includes("Enhanced")
+    ) ||
+    japaneseVoices.find((o) => o.name.includes("Kyoko")) ||
+    null;
 
   const samantha = englishVoices.find((o) => o.name === "Samantha");
   if (samantha) englishVoice = samantha;
