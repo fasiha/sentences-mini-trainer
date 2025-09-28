@@ -1,9 +1,13 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const DOC_NAME = "gloss-1k.json";
+
+// Speech synthesis voices
 let englishVoice = null;
 let japaneseVoice = null;
 const synth = window.speechSynthesis;
+
+// Array of English/Japanese sentence pairs
 let sentences = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -193,24 +197,21 @@ const learnRow = async (supabase, id) => {
     successes += !!data;
   }
 
-  {
-    const intervalMs = 15 * 60e3; // 15 minutes
-    const dueMs = Date.now() + intervalMs;
-    const base = {
-      document_ident: DOC_NAME,
-      card_ident: `${id}`,
-      model: { v: 0, type: "leitner", intervalMs, dueMs },
-    };
-    const { data, error } = await supabase
-      .from("memory")
-      .insert([
-        { ...base, direction_ident: "en-ja" },
-        { ...base, direction_ident: "ja-en" },
-      ])
-      .select();
-    console.log("mem model", data, error);
-    successes += !!data;
-  }
+  const updateBase = {
+    p_document_ident: DOC_NAME,
+    p_card_ident: `${id}`,
+    is_correct: true,
+  };
+  const models = await Promise.all(
+    ["en-ja", "ja-en"].map((direction) =>
+      supabase.rpc("update_leiter_model", {
+        ...updateBase,
+        p_direction_ident: direction,
+      })
+    )
+  );
+  successes += !!models[0].data;
+  successes += !!models[1].data;
 
-  if (successes === 2) markCardAsLearned(id);
+  if (successes === 3) markCardAsLearned(id);
 };

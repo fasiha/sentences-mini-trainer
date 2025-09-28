@@ -33,3 +33,5 @@ create table public.reviews (
 ```
 
 It also expects Supabase storage bucket `documents` containing a file `gloss-1k.json`, which is an array of objects, `{en: string, ja: string}[]`.
+
+It also expects a Leitner update function as defined in [`leitner.plpgsql`](./leitner.plpgsql).
