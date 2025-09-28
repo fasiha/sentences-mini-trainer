@@ -32,6 +32,19 @@ create table public.reviews (
 ) TABLESPACE pg_default;
 ```
 
+For `public.memory` there's an index on one of the values of a JSONB column:
+```sql
+CREATE INDEX idx_memory_model_due_ms
+ON public.memory
+USING btree
+  ((((model ->> 'dueMs'::text))::bigint))
+WHERE (
+  (model ? 'dueMs'::text)
+  AND 
+  (jsonb_typeof((model -> 'dueMs'::text)) = 'number'::text)
+)
+```
+
 It also expects Supabase storage bucket `documents` containing a file `gloss-1k.json`, which is an array of objects, `{en: string, ja: string}[]`.
 
-It also expects a Leitner update function as defined in [`leitner.plpgsql`](./leitner.plpgsql).
+It also expects a Leitner update function as defined in [`leitner.sql`](./leitner.sql).
