@@ -114,10 +114,9 @@ const renderReview = (supabase, id, direction) => {
     if (direction === "en-ja") speakEnglish(row.en);
     else speakJapanese(row.ja);
   };
-  const playAnswer = () => {
+  const playJapanese = () => {
     synth.cancel();
-    if (direction === "ja-en") speakEnglish(row.en);
-    else speakJapanese(row.ja);
+    speakJapanese(row.ja);
   };
 
   playQuestion();
@@ -142,16 +141,26 @@ const renderReview = (supabase, id, direction) => {
   submitQuizButton.textContent = "Submit";
   inputForm.appendChild(submitQuizButton);
 
+  const questionText = document.createElement("p");
+  questionText.textContent = direction === "en-ja" ? row.en : row.ja;
+  inputForm.appendChild(questionText);
+
   const answerSection = document.createElement("div");
   answerSection.classList.add("answer-section");
   answerSection.classList.add("hidden");
+
+  const question = document.createElement("h3");
+  question.textContent = `Question: ${direction === "en-ja" ? row.en : row.ja}`;
+  answerSection.appendChild(question);
 
   const userAnswer = document.createElement("h3");
   answerSection.appendChild(userAnswer);
   // this will eventually contain the answer they typed in
 
-  const expectedAnswer = document.createElement("h2");
-  expectedAnswer.textContent = direction === "en-ja" ? row.ja : row.en;
+  const expectedAnswer = document.createElement("h3");
+  expectedAnswer.textContent = `Expected: ${
+    direction === "en-ja" ? row.ja : row.en
+  }`;
   answerSection.appendChild(expectedAnswer);
 
   const yesButton = document.createElement("button");
@@ -166,7 +175,7 @@ const renderReview = (supabase, id, direction) => {
 
   const replay = document.createElement("button");
   replay.textContent = "Replay";
-  replay.addEventListener("click", playAnswer);
+  replay.addEventListener("click", playJapanese);
   answerSection.appendChild(replay);
 
   inputForm.addEventListener("submit", async (e) => {
@@ -174,8 +183,8 @@ const renderReview = (supabase, id, direction) => {
     const answer = input.value.trim();
     if (!answer) return;
 
-    playAnswer();
-    userAnswer.textContent = answer;
+    playJapanese();
+    userAnswer.textContent = `Your answer: ${answer}`;
     inputForm.classList.add("hidden");
     answerSection.classList.remove("hidden");
   });
