@@ -115,6 +115,7 @@ const renderReview = (supabase, id, direction) => {
   inputForm.classList.add("quiz-input");
 
   const replayButton = document.createElement("button");
+  replayButton.type = "button";
   replayButton.textContent = "Replay";
   replayButton.addEventListener("click", playQuestion);
   inputForm.appendChild(replayButton);
