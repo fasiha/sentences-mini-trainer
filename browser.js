@@ -58,11 +58,22 @@ document.addEventListener("DOMContentLoaded", () => {
         await fetchModelsToReview(supabase);
       }
       if (TO_REVIEW.length > 0) {
-        renderReview(
-          supabase,
-          TO_REVIEW[0].card_ident,
-          TO_REVIEW[0].direction_ident
-        );
+        // Sometimes pick the oldest-due card;
+        // Sometimes pick a English to Japanese card from the top 10.
+        // Sometimes pick any card from the list.
+        const rand = Math.random();
+        const toReview =
+          (rand < 0.33
+            ? TO_REVIEW[0]
+            : rand < 0.8
+            ? randElement(
+                TO_REVIEW.filter(
+                  (o, i) => i < 10 && o.direction_ident === "en-ja"
+                )
+              )
+            : randElement(TO_REVIEW)) || TO_REVIEW[0];
+
+        renderReview(supabase, toReview.card_ident, toReview.direction_ident);
       }
     });
 });
@@ -254,7 +265,7 @@ const fetchModelsToReview = async (supabase) => {
     .eq("document_ident", DOC_NAME)
     .not("model->>dueMs", "is", null)
     .order("model->>dueMs", { ascending: true })
-    .limit(2);
+    .limit(10);
   if (data) {
     TO_REVIEW = data;
   }
@@ -434,3 +445,5 @@ const speakEnglish = (text) => {
  */
 const cleanJapanese = (raw) =>
   raw.replaceAll(/\s/g, "").replaceAll(/[―]+/gu, "\n");
+
+const randElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
