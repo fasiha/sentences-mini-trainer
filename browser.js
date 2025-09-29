@@ -58,21 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await fetchModelsToReview(supabase);
       }
       if (TO_REVIEW.length > 0) {
-        // Sometimes pick the oldest-due card;
-        // Sometimes pick a English to Japanese card from the top 10.
-        // Sometimes pick any card from the list.
-        const rand = Math.random();
-        const toReview =
-          (rand < 0.33
-            ? TO_REVIEW[0]
-            : rand < 0.8
-            ? randElement(
-                TO_REVIEW.filter(
-                  (o, i) => i < 10 && o.direction_ident === "en-ja"
-                )
-              )
-            : randElement(TO_REVIEW)) || TO_REVIEW[0];
-
+        const toReview = pickReview();
         renderReview(supabase, toReview.card_ident, toReview.direction_ident);
       }
     });
@@ -251,11 +237,8 @@ const renderReview = (supabase, id, direction) => {
 
     TO_REVIEW = TO_REVIEW.filter((o) => o.card_ident !== id);
     if (TO_REVIEW.length > 0) {
-      renderReview(
-        supabase,
-        TO_REVIEW[0].card_ident,
-        TO_REVIEW[0].direction_ident
-      );
+      const next = pickReview();
+      renderReview(supabase, next.card_ident, next.direction_ident);
     } else {
       reviewArea.classList.add("hidden");
     }
@@ -456,3 +439,31 @@ const cleanJapanese = (raw) =>
   raw.replaceAll(/\s/g, "").replaceAll(/[―]+/gu, "\n");
 
 const randElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+const shortestInterval = () => {
+  const sorted = TO_REVIEW.slice().sort(
+    (a, b) => a.model.intervalMs - b.model.intervalMs
+  );
+  return sorted.find((o) => o.direction_ident === "en-ja") || sorted[0];
+};
+
+/**
+ * Sometimes pick the oldest-due card;
+ * Sometimes pick a English to Japanese card from the top 10.
+ * Sometimes pick the card with the shortest interval.
+ * Sometimes pick any card from the list.
+ */
+const pickReview = () => {
+  const rand = Math.random();
+  return (
+    (rand < 0.15
+      ? TO_REVIEW[0]
+      : rand < 0.3
+      ? randElement(
+          TO_REVIEW.filter((o, i) => i < 10 && o.direction_ident === "en-ja")
+        )
+      : rand < 0.8
+      ? shortestInterval()
+      : randElement(TO_REVIEW)) || TO_REVIEW[0]
+  );
+};

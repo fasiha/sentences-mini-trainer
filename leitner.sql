@@ -37,8 +37,8 @@ BEGIN
         new_model := jsonb_build_object(
             'v', 0,
             'type', 'leitner',
-            'intervalMs', 60000,
-            'dueMs', current_ms + 60000
+            'intervalMs', 5 * 60000,
+            'dueMs', current_ms + 5 * 60000
         );
 
         INSERT INTO public.memory (user_id, document_ident, card_ident, direction_ident, model)
@@ -57,16 +57,16 @@ BEGIN
         old_interval_ms := (existing_model->>'intervalMs')::bigint;
         old_due_ms := (existing_model->>'dueMs')::bigint;
 
-        CASE p_is_correct
-            WHEN 1 THEN -- Correct
+        CASE
+            WHEN p_is_correct > 0 THEN -- Correct
                 IF current_ms >= old_due_ms THEN
-                    new_interval_ms := LEAST(7.884e9, (old_interval_ms * sqrt(2)))::bigint;
+                    new_interval_ms := LEAST(7.884e9, (old_interval_ms * power(3, p_is_correct / 2.0)))::bigint;
                 ELSE
                     new_interval_ms := old_interval_ms;
                 END IF;
-            WHEN -1 THEN -- Incorrect
-                new_interval_ms := GREATEST(60000, (old_interval_ms / sqrt(2)))::bigint;
-            ELSE -- Handles 0 and any other unexpected values
+            WHEN p_is_correct < 0 THEN -- Incorrect
+                new_interval_ms := GREATEST(60000, (old_interval_ms * power(3, p_is_correct / 2.0)))::bigint;
+            ELSE
                 new_interval_ms := old_interval_ms;
         END CASE;
 
