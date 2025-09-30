@@ -59,7 +59,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (TO_REVIEW.length > 0) {
         const toReview = pickReview();
-        renderReview(supabase, toReview.card_ident, toReview.direction_ident);
+        renderReview(
+          supabase,
+          toReview.card_ident,
+          toReview.direction_ident,
+          toReview.model.dueMs
+        );
       }
     });
 });
@@ -87,7 +92,7 @@ const notify = (messageOrFunction, timeoutMs) => {
   };
 };
 
-const renderReview = (supabase, id, direction) => {
+const renderReview = (supabase, id, direction, dueMs) => {
   const reviewArea = document.querySelector("#review-area");
   const row = sentences?.[Number(id)];
   if (!reviewArea || !row) return;
@@ -109,6 +114,12 @@ const renderReview = (supabase, id, direction) => {
 
   const inputForm = document.createElement("form");
   inputForm.classList.add("quiz-input");
+
+  if (dueMs && Date.now() < dueMs) {
+    const info = document.createElement("span");
+    info.textContent = "(Not yet due for review)";
+    inputForm.appendChild(info);
+  }
 
   const replayButton = document.createElement("button");
   replayButton.type = "button";
@@ -238,7 +249,12 @@ const renderReview = (supabase, id, direction) => {
     TO_REVIEW = TO_REVIEW.filter((o) => o.card_ident !== id);
     if (TO_REVIEW.length > 0) {
       const next = pickReview();
-      renderReview(supabase, next.card_ident, next.direction_ident);
+      renderReview(
+        supabase,
+        next.card_ident,
+        next.direction_ident,
+        next.model.dueMs
+      );
     } else {
       reviewArea.classList.add("hidden");
     }
@@ -444,12 +460,16 @@ const shortestInterval = () => {
   const sorted = TO_REVIEW.slice().sort(
     (a, b) => a.model.intervalMs - b.model.intervalMs
   );
-  return sorted.find((o) => o.direction_ident === "en-ja") || sorted[0];
+  return (
+    (Math.random() < 0.5 &&
+      sorted.find((o) => o.direction_ident === "en-ja")) ||
+    sorted[0]
+  );
 };
 
 /**
  * Sometimes pick the oldest-due card;
- * Sometimes pick a English to Japanese card from the top 10.
+ * Sometimes pick a English to Japanese card from the top few cards.
  * Sometimes pick the card with the shortest interval.
  * Sometimes pick any card from the list.
  */
@@ -459,9 +479,7 @@ const pickReview = () => {
     (rand < 0.15
       ? TO_REVIEW[0]
       : rand < 0.3
-      ? randElement(
-          TO_REVIEW.filter((o, i) => i < 10 && o.direction_ident === "en-ja")
-        )
+      ? randElement(TO_REVIEW.filter((o) => o.direction_ident === "en-ja"))
       : rand < 0.8
       ? shortestInterval()
       : randElement(TO_REVIEW)) || TO_REVIEW[0]
